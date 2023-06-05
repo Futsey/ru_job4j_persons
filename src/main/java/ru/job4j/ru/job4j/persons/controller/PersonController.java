@@ -1,54 +1,59 @@
 package ru.job4j.ru.job4j.persons.controller;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.ru.job4j.persons.model.Person;
-import ru.job4j.ru.job4j.persons.repository.IPersonRepository;
+import ru.job4j.ru.job4j.persons.service.PersonService;
 
 import java.util.List;
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/person")
 public class PersonController {
 
-    private final IPersonRepository persons;
+    private final PersonService personService;
 
     @GetMapping("/")
     public List<Person> findAll() {
-        return this.persons.findAll();
+        return this.personService.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Person> findById(@PathVariable int id) {
-        var person = this.persons.findById(id);
+        var isPersonFound = this.personService.findById(id);
         return new ResponseEntity<Person>(
-                person.orElse(new Person()),
-                person.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                isPersonFound.orElse(new Person()),
+                isPersonFound.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
         );
     }
 
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
-        return new ResponseEntity<Person>(
-                this.persons.save(person),
-                HttpStatus.CREATED
-        );
+        var isPersonSaved = this.personService.save(person);
+        ResponseEntity<Person> rsl = new ResponseEntity<>(HttpStatus.CONFLICT);
+        if (isPersonSaved.isPresent()) {
+            rsl = new ResponseEntity<Person>(
+                    isPersonSaved.get(),
+                    HttpStatus.CREATED
+                    );
+        }
+        return rsl;
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        this.persons.save(person);
-        return ResponseEntity.ok().build();
+        var isPersonUpdated = this.personService.save(person);
+        return isPersonUpdated.isPresent()
+                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
-        Person person = new Person();
-        person.setId(id);
-        this.persons.delete(person);
-        return ResponseEntity.ok().build();
+        var isPersonDeleted = this.personService.delete(id);
+        return isPersonDeleted.isPresent()
+                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 }

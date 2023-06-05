@@ -1,9 +1,6 @@
 package ru.job4j.ru.job4j.persons.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -13,6 +10,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "persons")
+@EqualsAndHashCode(of = {"id"})
 public class Person {
 
     @Id
