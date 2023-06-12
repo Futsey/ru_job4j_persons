@@ -42,7 +42,6 @@ public class PersonService {
         boolean rsl = false;
         Optional<Person> nonNullPerson = findById(person.getId());
         if (nonNullPerson.isPresent()) {
-            personRepository.delete(nonNullPerson.get());
             personRepository.save(nonNullPerson.get());
             rsl = true;
         }

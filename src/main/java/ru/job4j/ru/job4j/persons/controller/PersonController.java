@@ -35,19 +35,19 @@ public class PersonController {
         var isPersonSaved = this.personService.save(person);
         return new ResponseEntity<Person>(
                 isPersonSaved.orElse(new Person()),
-                isPersonSaved.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                isPersonSaved.isPresent() ? HttpStatus.OK : HttpStatus.CONFLICT
         );
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
         return this.personService.update(person)
-                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.CONFLICT).build();
+                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         return this.personService.delete(id)
-                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.CONFLICT).build();
+                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }
