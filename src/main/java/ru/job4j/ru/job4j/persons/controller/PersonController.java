@@ -1,9 +1,11 @@
 package ru.job4j.ru.job4j.persons.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.ru.job4j.persons.model.Person;
 import ru.job4j.ru.job4j.persons.service.PersonService;
@@ -16,7 +18,7 @@ import java.util.List;
 public class PersonController {
 
     private final PersonService personService;
-    private BCryptPasswordEncoder encoder;
+    private final BCryptPasswordEncoder encoder;
 
     @GetMapping("/")
     public List<Person> findAll() {
@@ -29,15 +31,6 @@ public class PersonController {
         return new ResponseEntity<Person>(
                 isPersonFound.orElse(new Person()),
                 isPersonFound.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
-        );
-    }
-
-    @PostMapping("/")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
-        var isPersonSaved = this.personService.save(person);
-        return new ResponseEntity<Person>(
-                isPersonSaved.orElse(new Person()),
-                isPersonSaved.isPresent() ? HttpStatus.OK : HttpStatus.CONFLICT
         );
     }
 
@@ -54,8 +47,12 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public void signUp(@RequestBody Person person) {
+    public ResponseEntity<Person> signUp(@RequestBody Person person) {
         person.setPassword(encoder.encode(person.getPassword()));
-        personService.save(person);
+        var isPersonSaved = this.personService.save(person);
+        return new ResponseEntity<Person>(
+                isPersonSaved.orElse(new Person()),
+                isPersonSaved.isPresent() ? HttpStatus.OK : HttpStatus.CONFLICT
+        );
     }
 }
