@@ -3,6 +3,10 @@ package ru.job4j.ru.job4j.persons.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.job4j.ru.job4j.persons.model.Person;
 import ru.job4j.ru.job4j.persons.repository.IPersonRepository;
@@ -10,9 +14,11 @@ import ru.job4j.ru.job4j.persons.repository.IPersonRepository;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
+
 @Service
 @RequiredArgsConstructor
-public class PersonService {
+public class PersonService implements UserDetailsService {
 
     private final IPersonRepository personRepository;
 
@@ -60,5 +66,14 @@ public class PersonService {
             rsl = true;
         }
         return rsl;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
+        var nonNullUser = personRepository.findByLogin(login);
+        if (nonNullUser.isEmpty()) {
+            throw new UsernameNotFoundException(login);
+        }
+        return new User(nonNullUser.get().getLogin(), nonNullUser.get().getPassword(), emptyList());
     }
 }

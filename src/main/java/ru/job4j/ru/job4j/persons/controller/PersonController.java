@@ -3,6 +3,7 @@ package ru.job4j.ru.job4j.persons.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.ru.job4j.persons.model.Person;
 import ru.job4j.ru.job4j.persons.service.PersonService;
@@ -15,6 +16,7 @@ import java.util.List;
 public class PersonController {
 
     private final PersonService personService;
+    private BCryptPasswordEncoder encoder;
 
     @GetMapping("/")
     public List<Person> findAll() {
@@ -49,5 +51,11 @@ public class PersonController {
     public ResponseEntity<Void> delete(@PathVariable int id) {
         return this.personService.delete(id)
                 ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @PostMapping("/sign-up")
+    public void signUp(@RequestBody Person person) {
+        person.setPassword(encoder.encode(person.getPassword()));
+        personService.save(person);
     }
 }

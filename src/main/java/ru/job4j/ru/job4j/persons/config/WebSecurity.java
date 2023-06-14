@@ -1,6 +1,5 @@
 package ru.job4j.ru.job4j.persons.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -12,7 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import ru.job4j.ru.job4j.persons.service.UserDetailsServiceImpl;
+import ru.job4j.ru.job4j.persons.service.PersonService;
 import ru.job4j.ru.job4j.persons.util.JWTAuthenticationFilter;
 import ru.job4j.ru.job4j.persons.util.JWTAuthorizationFilter;
 
@@ -21,12 +20,12 @@ import static ru.job4j.ru.job4j.persons.util.JWTAuthenticationFilter.SIGN_UP_URL
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
 
-    private UserDetailsServiceImpl userDetailsService;
+    private PersonService personService;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public WebSecurity(UserDetailsServiceImpl userDetailsService,
+    public WebSecurity(PersonService personService,
                        BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.userDetailsService = userDetailsService;
+        this.personService = personService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
@@ -44,7 +43,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
+        auth.userDetailsService(personService).passwordEncoder(bCryptPasswordEncoder);
     }
 
     @Bean
