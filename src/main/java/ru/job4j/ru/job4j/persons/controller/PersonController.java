@@ -1,6 +1,9 @@
 package ru.job4j.ru.job4j.persons.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.job4j.ru.job4j.persons.model.Person;
 import ru.job4j.ru.job4j.persons.service.PersonService;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -19,15 +26,24 @@ public class PersonController {
 
     private final PersonService personService;
     private final BCryptPasswordEncoder encoder;
+    private final ObjectMapper objectMapper;
+    private static final Logger LOG = LoggerFactory.getLogger(PersonService.class.getName());
 
     @GetMapping("/")
     public List<Person> findAll() {
-        return this.personService.findAll();
+        List<Person> rsl = this.personService.findAll();
+        if (rsl.size() > 0) {
+            throw new IllegalArgumentException("No person saved in DB yet");
+        }
+        return rsl;
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Person> findById(@PathVariable int id) {
         var isPersonFound = this.personService.findById(id);
+        if (isPersonFound.isEmpty()) {
+            throw new IllegalArgumentException("Person with id: ".concat(String.valueOf(id)).concat(" doesn`t exists"));
+    }
         return new ResponseEntity<Person>(
                 isPersonFound.orElse(new Person()),
                 isPersonFound.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
@@ -36,8 +52,11 @@ public class PersonController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        return this.personService.update(person)
-                ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        boolean personUpdated =  this.personService.update(person);
+        if (!personUpdated) {
+            throw new IllegalArgumentException("Failed to update person with login: ".concat(person.getLogin()));
+        }
+        return personUpdated ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @DeleteMapping("/{id}")
@@ -50,9 +69,23 @@ public class PersonController {
     public ResponseEntity<Person> signUp(@RequestBody Person person) {
         person.setPassword(encoder.encode(person.getPassword()));
         var isPersonSaved = this.personService.save(person);
+        if (isPersonSaved.isEmpty()) {
+            throw new IllegalArgumentException("Person with login: ".concat(person.getLogin()).concat(" already exists"));
+        }
         return new ResponseEntity<Person>(
                 isPersonSaved.orElse(new Person()),
                 isPersonSaved.isPresent() ? HttpStatus.OK : HttpStatus.CONFLICT
         );
+    }
+
+    @ExceptionHandler(value = { IllegalArgumentException.class })
+    public void exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType("application/json");
+        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
+            put("message", e.getMessage());
+            put("type", e.getClass());
+        }}));
+        LOG.error(e.getLocalizedMessage());
     }
 }
