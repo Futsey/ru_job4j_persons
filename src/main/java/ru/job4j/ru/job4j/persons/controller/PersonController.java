@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.ru.job4j.persons.model.Person;
 import ru.job4j.ru.job4j.persons.service.PersonService;
@@ -29,13 +28,15 @@ public class PersonController {
     private final ObjectMapper objectMapper;
     private static final Logger LOG = LoggerFactory.getLogger(PersonService.class.getName());
 
-    @GetMapping("/")
-    public List<Person> findAll() {
+    @GetMapping("/list")
+    public ResponseEntity<List<Person>> findAll() {
         List<Person> rsl = this.personService.findAll();
-        if (rsl.size() > 0) {
+        if (rsl.size() == 0) {
             throw new IllegalArgumentException("No person saved in DB yet");
         }
-        return rsl;
+        return new ResponseEntity<>(
+                rsl,
+                HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -44,10 +45,11 @@ public class PersonController {
         if (isPersonFound.isEmpty()) {
             throw new IllegalArgumentException("Person with id: ".concat(String.valueOf(id)).concat(" doesn`t exists"));
     }
-        return new ResponseEntity<Person>(
-                isPersonFound.orElse(new Person()),
-                isPersonFound.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
-        );
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Job4jAUTH", "Person")
+                .contentType(MediaType.APPLICATION_JSON)
+                .contentLength(isPersonFound.get().toString().length())
+                .body(isPersonFound.get());
     }
 
     @PutMapping("/")
