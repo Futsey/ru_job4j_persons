@@ -15,6 +15,7 @@ import ru.job4j.ru.job4j.persons.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +82,7 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<Person> signUp(@RequestBody Person person) {
+    public ResponseEntity<Person> signUp(@Valid @RequestBody Person person) {
         person.setPassword(encoder.encode(person.getPassword()));
         var isPersonSaved = this.personService.save(person);
         if (isPersonSaved.isEmpty()) {
