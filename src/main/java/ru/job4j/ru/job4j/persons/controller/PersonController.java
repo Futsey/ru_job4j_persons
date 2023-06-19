@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.ru.job4j.persons.model.Person;
+import ru.job4j.ru.job4j.persons.model.PersonLoginDTO;
 import ru.job4j.ru.job4j.persons.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,6 +52,17 @@ public class PersonController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .contentLength(isPersonFound.get().toString().length())
                 .body(isPersonFound.get());
+    }
+
+    @GetMapping("/login-search/{login}")
+    public ResponseEntity<PersonLoginDTO> findByLogin(@PathVariable("login") String login) {
+        Optional<PersonLoginDTO> isPersonFound = this.personService.findByLoginOnly(login);
+        if (isPersonFound.isEmpty()) {
+            throw new IllegalArgumentException("Person with login: ".concat(login).concat(" doesn`t exists"));
+        }
+        return new ResponseEntity<>(
+                isPersonFound.get(),
+                HttpStatus.OK);
     }
 
     @PutMapping("/")

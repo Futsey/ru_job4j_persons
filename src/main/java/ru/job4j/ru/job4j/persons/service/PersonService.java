@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.job4j.ru.job4j.persons.model.Person;
+import ru.job4j.ru.job4j.persons.model.PersonLoginDTO;
 import ru.job4j.ru.job4j.persons.repository.IPersonRepository;
 
 import java.util.List;
@@ -34,6 +35,14 @@ public class PersonService implements UserDetailsService {
 
     public Optional<Person> findBylogin(String login) {
         return personRepository.findByLogin(login);
+    }
+
+    public Optional<PersonLoginDTO> findByLoginOnly(String login) {
+        var person = findBylogin(login);
+        return Optional.ofNullable(PersonLoginDTO.builder()
+                .id(person.get().getId())
+                .login(person.get().getLogin())
+                .build());
     }
 
     public Optional<Person> save(Person person) {
